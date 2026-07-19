@@ -357,6 +357,36 @@ export default function EmployeeDetail() {
   const docsByType = (type) =>
     (e.documents ?? []).filter((d) => d.documentType === type);
 
+  // Hàm kiểm tra quyền xem trường nhạy cảm
+  const canViewField = (fieldName) => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    // Lấy tên role chuyển về chữ thường để không sợ lỗi viết hoa/thường
+    const roleName = String(user.role || user.Role || "")
+      .trim()
+      .toLowerCase();
+
+    // 👑 KIM BÀI MIỄN TỬ: Nếu là boss hoặc admin -> TRẢ VỀ TRUE LUÔN (Không cần quan tâm DB bị NULL)
+    if (
+      roleName === "boss" ||
+      roleName === "admin" ||
+      roleName === "quản trị viên"
+    ) {
+      return true;
+    }
+
+    // Với các role thường (HR, Nhân viên) thì mới đi check trong mảng
+    const perms = user.fieldPermissions || user.FieldPermissions || [];
+    const found = perms.find(
+      (item) =>
+        String(item.fieldName || item.FieldName || "")
+          .trim()
+          .toLowerCase() === fieldName.toLowerCase(),
+    );
+
+    return found?.canView === true || found?.CanView === true;
+  };
+
   return (
     <div className="space-y-5">
       {previewDoc && (
@@ -544,12 +574,30 @@ export default function EmployeeDetail() {
         <Card title="Tài chính & Bảo hiểm">
           <Field
             label="Lương cơ bản"
-            value={display(e.basicSalary, fmtVND)}
+            value={
+              canViewField("BasicSalary")
+                ? display(e.basicSalary, fmtVND)
+                : "🔒 Không có quyền xem"
+            }
             wide
           />
           <Field label="Ngân hàng" value={display(e.bankName)} />
-          <Field label="Số tài khoản" value={display(e.bankAccountNumber)} />
-          <Field label="Số sổ BHXH" value={display(e.socialInsuranceNumber)} />
+          <Field
+            label="Số tài khoản"
+            value={
+              canViewField("BankAccountNumber")
+                ? display(e.bankAccountNumber)
+                : "🔒 *** *** *** (Bị ẩn)"
+            }
+          />
+          <Field
+            label="Số sổ BHXH"
+            value={
+              canViewField("SocialInsuranceNumber")
+                ? display(e.socialInsuranceNumber)
+                : "🔒 *** *** ***"
+            }
+          />
           <Field
             label="Ngày bắt đầu BHXH"
             value={display(e.socialInsuranceStartDate, fmtDate)}

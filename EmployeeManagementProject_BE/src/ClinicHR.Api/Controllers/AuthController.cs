@@ -44,7 +44,34 @@ public class AuthController(AppDbContext db, IConfiguration config) : Controller
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await db.SaveChangesAsync();
 
-        return Ok(new { accessToken, refreshToken, role = user.Role });
+        // ─── BỔ SUNG GÓC PHÂN QUYỀN (RBAC) ───
+        var systemRole = await db.SystemRoles
+            .Include(r => r.RolePermissions)
+            .Include(r => r.FieldPermissions)
+            .FirstOrDefaultAsync(r => r.RoleName == user.Role);
+
+        // 2. Trả về cho Frontend React
+        return Ok(new
+        {
+            accessToken,
+            refreshToken,
+            userId = user.Id,
+            username = user.Username,
+            role = user.Role,
+            // Bỏ ?? đi để C# tự hiểu kiểu dữ liệu (Nếu role null, FE sẽ tự chuyển null thành mảng rỗng [])
+            rolePermissions = systemRole?.RolePermissions.Select(p => new {
+                moduleName = p.ModuleName,
+                canView = p.CanView,
+                canCreate = p.CanCreate,
+                canEdit = p.CanEdit,
+                canDelete = p.CanDelete
+            }),
+            fieldPermissions = systemRole?.FieldPermissions.Select(f => new {
+                tableName = f.TableName,
+                fieldName = f.FieldName,
+                canView = f.CanView
+            })
+        });
     }
 
     [HttpPost("refresh-token")]

@@ -1,18 +1,45 @@
-import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Settings, LogOut, Menu, X, Stethoscope, FileText
-} from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+  LayoutDashboard,
+  Users,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  Stethoscope,
+  FileText,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
+// 1. Cải tiến mảng navItems: Thêm thuộc tính allowedRoles cho trang cần bảo mật
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { to: '/employees', label: 'Nhân viên',  icon: Users },
-  { to: '/decisions', label: 'Các quyết định', icon: FileText },
-  { to: '/settings',  label: 'Cài đặt',    icon: Settings },
-]
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/employees", label: "Nhân viên", icon: Users },
+  { to: "/decisions", label: "Các quyết định", icon: FileText },
+  {
+    to: "/settings",
+    label: "Cài đặt",
+    icon: Settings,
+    allowedRoles: ["Boss", "Admin", "Quản trị viên"], // 🔒 Chỉ những role này mới thấy
+  },
+];
 
 function Sidebar({ open, onClose }) {
+  // 2. Gọi useAuth để lấy thông tin user hiện tại
+  const { user } = useAuth();
+
+  // Chuẩn hóa tên Role về chữ thường để so sánh không sợ lỗi viết hoa/thường
+  const currentRole = String(user?.role || user?.Role || "")
+    .trim()
+    .toLowerCase();
+
+  // 3. Lọc danh sách menu: Nếu item có quy định allowedRoles thì kiểm tra, không thì mặc định cho qua
+  const visibleNavItems = navItems.filter((item) => {
+    if (!item.allowedRoles) return true; // Trang công khai (Dashboard, Nhân viên...) -> Luôn hiện
+    return item.allowedRoles.some((role) => role.toLowerCase() === currentRole);
+  });
+
   return (
     <>
       {/* Overlay mobile */}
@@ -27,7 +54,7 @@ function Sidebar({ open, onClose }) {
         className={`
           fixed top-0 left-0 h-full w-60 bg-slate-900 flex flex-col z-30
           transition-transform duration-300
-          ${open ? 'translate-x-0' : '-translate-x-full'}
+          ${open ? "translate-x-0" : "-translate-x-full"}
           lg:relative lg:translate-x-0 lg:z-auto
         `}
       >
@@ -36,7 +63,9 @@ function Sidebar({ open, onClose }) {
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600">
             <Stethoscope size={16} className="text-white" />
           </div>
-          <span className="text-white font-bold text-base tracking-wide">ClinicHR</span>
+          <span className="text-white font-bold text-base tracking-wide">
+            ClinicHR
+          </span>
           <button
             onClick={onClose}
             className="ml-auto text-slate-400 hover:text-white lg:hidden"
@@ -50,7 +79,8 @@ function Sidebar({ open, onClose }) {
           <p className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Menu
           </p>
-          {navItems.map(({ to, label, icon: Icon }) => (
+          {/* 4. Render danh sách đã được lọc (visibleNavItems thay vì navItems) */}
+          {visibleNavItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -58,14 +88,21 @@ function Sidebar({ open, onClose }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? "bg-indigo-600 text-white"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={17} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'} />
+                  <Icon
+                    size={17}
+                    className={
+                      isActive
+                        ? "text-white"
+                        : "text-slate-500 group-hover:text-white"
+                    }
+                  />
                   {label}
                 </>
               )}
@@ -79,21 +116,28 @@ function Sidebar({ open, onClose }) {
         </div>
       </aside>
     </>
-  )
+  );
 }
 
 function Topbar({ onMenuClick }) {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout()
-    navigate('/login', { replace: true })
-  }
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   const initials = user?.fullName
-    ? user.fullName.split(' ').map((w) => w[0]).slice(-2).join('').toUpperCase()
-    : 'U'
+    ? user.fullName
+        .split(" ")
+        .map((w) => w[0])
+        .slice(-2)
+        .join("")
+        .toUpperCase()
+    : user?.username
+      ? user.username.slice(0, 2).toUpperCase()
+      : "U";
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0">
@@ -111,9 +155,9 @@ function Topbar({ onMenuClick }) {
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
           <p className="text-sm font-medium text-slate-800 leading-tight">
-            {user?.fullName ?? user?.username ?? 'Người dùng'}
+            {user?.fullName ?? user?.username ?? "Người dùng"}
           </p>
-          <p className="text-xs text-slate-400">{user?.role ?? 'Admin'}</p>
+          <p className="text-xs text-slate-400">{user?.role ?? "Admin"}</p>
         </div>
         <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold select-none">
           {initials}
@@ -127,11 +171,11 @@ function Topbar({ onMenuClick }) {
         </button>
       </div>
     </header>
-  )
+  );
 }
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -144,5 +188,5 @@ export default function Layout() {
         </main>
       </div>
     </div>
-  )
+  );
 }
