@@ -1,0 +1,31 @@
+# =========================================
+# BACKEND (C# / .NET)
+# =========================================
+**/bin/
+**/obj/
+**/.vs/
+*.user
+**/appsettings.Development.json
+
+# Không đẩy file tài liệu upload của user lên mạng
+**/wwwroot/uploads/
+
+# =========================================
+# FRONTEND (React / Node.js)
+# =========================================
+**/node_modules/
+**/dist/
+**/build/
+.env
+.env.local
+.env.development
+.env.production
+
+# =========================================
+# HỆ ĐIỀU HÀNH & IDE
+# =========================================
+.vscode/
+.idea/
+*.suo
+.DS_Store
+Thumbs.db
