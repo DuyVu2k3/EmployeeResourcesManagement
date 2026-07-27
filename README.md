@@ -7,6 +7,8 @@
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-CC292B?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
 
+> 🌐 **LIVE DEMO / TRẢI NGHIỆM TRỰC TIẾP:** [http://clinichr-web.runasp.net](http://clinichr-web.runasp.net)
+
 **ClinicHR** là giải pháp phần mềm quản lý nhân sự (HRM) toàn diện, hiện đại được thiết kế chuyên biệt cho môi trường phòng khám và y tế. Hệ thống nổi bật với kiến trúc bảo mật cao, giao diện trực quan và cơ chế **Phân quyền dựa trên vai trò đa tầng (Real RBAC - Role-Based Access Control)** cho phép kiểm soát quyền truy cập đến từng nút bấm và từng trường dữ liệu nhạy cảm.
 
 ---
